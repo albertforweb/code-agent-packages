@@ -1,0 +1,19 @@
+{
+  "name": "code-agent-packages",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CodeAgent feature package source and artifact builds",
+  "type": "module",
+  "workspaces": [
+    "software-developer"
+  ],
+  "scripts": {
+    "build": "node scripts/build-feature-packages.mjs"
+  },
+  "dependencies": {
+    "@codeagent/feature-package-sdk": "file:../code-agent-sdk"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.1"
+  }
+}
