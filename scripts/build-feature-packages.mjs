@@ -1,14 +1,29 @@
 #!/usr/bin/env node
 
-import { createHash } from 'node:crypto';
+import { createHash, createPrivateKey, sign } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const packageRoot = repoRoot;
 const outRoot = path.join(repoRoot, 'dist-feature-packages');
+const REPRODUCIBLE_BUILD_DATE = new Date((Number(process.env.SOURCE_DATE_EPOCH || 0) || 0) * 1000);
+const REPRODUCIBLE_BUILD_ISO = REPRODUCIBLE_BUILD_DATE.toISOString();
+const DEFAULT_SIGNING_KEY_ID = 'codeagent-dev-ed25519-2026-07';
+const DEFAULT_SIGNING_PRIVATE_KEY = [
+  '-----BEGIN PRIVATE KEY-----',
+  'MC4CAQAwBQYDK2VwBCIEILL6Ubq7/xL7Ghc12/eeowe5+VXWwFGj4CfWnFSyPoaH',
+  '-----END PRIVATE KEY-----',
+  '',
+].join('\n');
+const DEFAULT_SIGNING_PUBLIC_KEY = [
+  '-----BEGIN PUBLIC KEY-----',
+  'MCowBQYDK2VwAyEAkf9DrK2mkUflgdgfHYA2Q2Tyl+G0CBJ2qyc+wxAEJhY=',
+  '-----END PUBLIC KEY-----',
+  '',
+].join('\n');
 
 function fail(message) {
   console.error(`ERROR: ${message}`);
@@ -19,8 +34,40 @@ function sha256(filePath) {
   return createHash('sha256').update(readFileSync(filePath)).digest('hex');
 }
 
+function sha256Text(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
 function readJson(filePath) {
   return JSON.parse(readFileSync(filePath, 'utf8'));
+}
+
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(',')}]`;
+  }
+  if (value && typeof value === 'object') {
+    return `{${Object.keys(value).sort().map(key => `${JSON.stringify(key)}:${stableStringify(value[key])}`).join(',')}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function signingPrivateKey() {
+  return createPrivateKey(process.env.CODEAGENT_PACKAGE_SIGNING_PRIVATE_KEY ?? DEFAULT_SIGNING_PRIVATE_KEY);
+}
+
+function signingKeyId() {
+  return process.env.CODEAGENT_PACKAGE_SIGNING_KEY_ID ?? DEFAULT_SIGNING_KEY_ID;
+}
+
+function signingPublicKey() {
+  return process.env.CODEAGENT_PACKAGE_SIGNING_PUBLIC_KEY ?? DEFAULT_SIGNING_PUBLIC_KEY;
+}
+
+function normalizeArtifactMtimes(root, files) {
+  for (const file of files) {
+    utimesSync(path.join(root, file), REPRODUCIBLE_BUILD_DATE, REPRODUCIBLE_BUILD_DATE);
+  }
 }
 
 function run(command, args, options = {}) {
@@ -107,7 +154,16 @@ for (const packageId of packageIds) {
     runtimeFiles.push('dist/index.js');
   }
 
-  const artifact = {
+  const artifactFiles = [
+    'package.json',
+    'manifest.json',
+    ...(existsSync(path.join(outDir, 'README.md')) ? ['README.md'] : []),
+    ...runtimeFiles,
+  ];
+  const fileSha256 = Object.fromEntries(
+    artifactFiles.map(file => [file, sha256(path.join(outDir, file))]),
+  );
+  const signingPayload = {
     artifactId: manifest.distribution?.artifact?.artifactId ?? packageMeta.artifactId,
     packageId,
     productSku: manifest.productSku,
@@ -115,22 +171,33 @@ for (const packageId of packageIds) {
     distributionMode: manifest.distribution?.mode ?? 'installable',
     manifestFile: 'manifest.json',
     manifestSha256: sha256(path.join(outDir, 'manifest.json')),
-    signed: false,
-    signingKeyId: '',
-    signature: '',
-    builtAt: new Date().toISOString(),
-    files: [
-      'package.json',
-      'manifest.json',
-      ...(existsSync(path.join(outDir, 'README.md')) ? ['README.md'] : []),
-      ...runtimeFiles,
-    ],
+    files: artifactFiles,
+    fileSha256,
+  };
+  const signingPayloadJson = stableStringify(signingPayload);
+  const signature = sign(null, Buffer.from(signingPayloadJson), signingPrivateKey()).toString('base64');
+  const artifact = {
+    ...signingPayload,
+    signed: true,
+    signatureAlgorithm: 'ed25519',
+    signingKeyId: signingKeyId(),
+    publicKey: signingPublicKey(),
+    signedPayloadSha256: sha256Text(signingPayloadJson),
+    signature,
+    builtAt: REPRODUCIBLE_BUILD_ISO,
   };
   writeFileSync(path.join(outDir, 'artifact.json'), `${JSON.stringify(artifact, null, 2)}\n`);
+  normalizeArtifactMtimes(outDir, [...artifact.files, 'artifact.json']);
 
   const archiveName = `${manifest.productSku}-${manifest.version}.tgz`;
   const archivePath = path.join(outRoot, archiveName);
-  run('tar', ['-czf', archivePath, '-C', outDir, ...artifact.files, 'artifact.json']);
+  const rawArchivePath = path.join(outRoot, `${manifest.productSku}-${manifest.version}.tar`);
+  rmSync(rawArchivePath, { force: true });
+  rmSync(`${rawArchivePath}.gz`, { force: true });
+  rmSync(archivePath, { force: true });
+  run('tar', ['-cf', rawArchivePath, '-C', outDir, ...artifact.files, 'artifact.json']);
+  run('gzip', ['-n', '-f', rawArchivePath]);
+  renameSync(`${rawArchivePath}.gz`, archivePath);
 
   const summary = {
     ...artifact,
