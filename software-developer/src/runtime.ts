@@ -1,4 +1,30 @@
 import { defineFeaturePackageRuntime, type FeaturePackageRuntimeModule } from '@codeagent/feature-package-sdk';
+export { runAutomationCommand } from './cli/automation.js';
+export {
+  employeeCreateHandler,
+  employeeDeleteHandler,
+  employeeListHandler,
+  employeeUpdateHandler,
+  projectContextHandler,
+  projectCreateHandler,
+  projectDeleteHandler,
+  projectDeliverablesHandler,
+  projectListHandler,
+  projectRunsHandler,
+  projectShowHandler,
+  projectStartHandler,
+  projectStatusHandler,
+  projectTeamCreateHandler,
+  projectTeamDeleteHandler,
+  projectTeamListHandler,
+  projectTeamUpdateHandler,
+  projectUpdateHandler,
+  roleCreateHandler,
+  roleDeleteHandler,
+  roleListHandler,
+  roleUpdateHandler,
+  runProjectStudioCommand,
+} from './cli/project-studio.js';
 
 const runtime: FeaturePackageRuntimeModule = defineFeaturePackageRuntime({
   packageId: 'software-developer',
