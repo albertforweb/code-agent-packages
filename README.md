@@ -4,7 +4,7 @@ This repo owns CodeAgent feature package source trees and local artifact builds.
 
 Current package:
 
-- `software-developer`: paid package for Project Studio, automation, developer tools, MCP, developer history, and developer settings.
+- `software-developer`: paid package for Project Studio, optional fully autonomous delivery, virtual teams, automation, and developer-specific settings.
 
 Build artifacts:
 
