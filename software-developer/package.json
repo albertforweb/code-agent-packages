@@ -9,12 +9,13 @@
     "productSku": "codeagent.package.software-developer",
     "sdk": {
       "name": "@codeagent/feature-package-sdk",
-      "versionRange": "^0.1.0"
+      "versionRange": "^0.2.0"
     },
     "manifest": "manifest.json",
     "artifactId": "codeagent.software-developer.bundle",
     "entrypoints": {
       "runtime": "dist/index.js",
+      "renderer": "dist/renderer.js",
       "cli": "dist/cli.js"
     }
   }

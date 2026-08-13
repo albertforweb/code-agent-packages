@@ -15,6 +15,7 @@
     "@codeagent/feature-package-sdk": "file:../code-agent-sdk"
   },
   "devDependencies": {
-    "esbuild": "^0.28.1"
+    "esbuild": "^0.28.1",
+    "react": "^18.2.0"
   }
 }

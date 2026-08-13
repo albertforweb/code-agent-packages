@@ -7,24 +7,17 @@
  * contract; professional workflow presentation remains package-owned.
  */
 import React, { useEffect, useRef, useState } from 'react';
+import {
+  defineFeaturePackageRenderer,
+  type FeaturePackageRendererContribution,
+  type FeaturePackageRendererHost,
+  type FeaturePackageRendererModule,
+} from '@codeagent/feature-package-sdk';
 import { getDefaultTeamGoal, getDefaultTeamTools } from './project-defaults';
 
-export interface SoftwareDeveloperRendererHost {
-  /** Core chat presentation reused by package-owned project chat surfaces. */
-  MessageItem: React.ComponentType<any>;
-  [key: string]: unknown;
-}
-
-export interface SoftwareDeveloperRendererViews {
-  ProjectsView: React.ComponentType<any>;
-  ToolsView: React.ComponentType<any>;
-  AutomationView: React.ComponentType<any>;
-  HistoryView: React.ComponentType<any>;
-}
-
 export function createSoftwareDeveloperRendererViews(
-  host: SoftwareDeveloperRendererHost,
-): SoftwareDeveloperRendererViews {
+  host: FeaturePackageRendererHost,
+): Record<string, React.ComponentType<any>> {
   const {
     AUTOMATION_PERMISSION_TOOLS,
     DEFAULT_AUTONOMOUS_ROLES,
@@ -5260,5 +5253,25 @@ export function createSoftwareDeveloperRendererViews(
   
   
 
-  return { ProjectsView, ToolsView, AutomationView, HistoryView };
+  return {
+    projects: ProjectsView,
+    tools: ToolsView,
+    automation: AutomationView,
+    history: HistoryView,
+  };
 }
+
+const renderer: FeaturePackageRendererModule = defineFeaturePackageRenderer({
+  packageId: 'software-developer',
+  createContribution(host): FeaturePackageRendererContribution {
+    return {
+      views: createSoftwareDeveloperRendererViews(host),
+      workflowDefaults: {
+        getDefaultGoal: getDefaultTeamGoal,
+        getDefaultTools: getDefaultTeamTools,
+      },
+    };
+  },
+});
+
+export default renderer;

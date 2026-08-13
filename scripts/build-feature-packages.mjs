@@ -172,6 +172,26 @@ for (const packageId of packageIds) {
     runtimeFiles.push('dist/cli.js');
   }
 
+  const rendererSourcePath = path.join(sourceDir, 'src', 'renderer.tsx');
+  const rendererOutPath = path.join(outDir, 'dist', 'renderer.js');
+  if (manifest.entrypoints?.renderer) {
+    if (!existsSync(rendererSourcePath)) {
+      fail(`Manifest for ${packageId} declares a renderer entrypoint but ${path.relative(repoRoot, rendererSourcePath)} is missing`);
+    }
+    mkdirSync(path.dirname(rendererOutPath), { recursive: true });
+    run(npxCommand(), [
+      'esbuild',
+      rendererSourcePath,
+      '--bundle',
+      '--platform=browser',
+      '--format=esm',
+      '--external:react',
+      '--external:@codeagent/feature-package-sdk',
+      `--outfile=${rendererOutPath}`,
+    ]);
+    runtimeFiles.push('dist/renderer.js');
+  }
+
   const artifactFiles = [
     'package.json',
     'manifest.json',

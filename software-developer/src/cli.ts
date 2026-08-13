@@ -1,5 +1,6 @@
 import { runAutomationCommand } from './cli/automation.js';
 import { runProjectStudioCommand } from './cli/project-studio.js';
+import type { FeaturePackageCliModule } from '@codeagent/feature-package-sdk';
 
 export { runAutomationCommand } from './cli/automation.js';
 export {
@@ -46,3 +47,6 @@ export async function runCliCommand(command: string, args: string): Promise<stri
   }
   throw new Error(`Software Developer package does not register the "${command}" CLI command.`);
 }
+
+const cliModule: FeaturePackageCliModule = { runCliCommand };
+export default cliModule;
