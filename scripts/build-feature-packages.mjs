@@ -154,6 +154,24 @@ for (const packageId of packageIds) {
     runtimeFiles.push('dist/index.js');
   }
 
+  const cliSourcePath = path.join(sourceDir, 'src', 'cli.ts');
+  const cliOutPath = path.join(outDir, 'dist', 'cli.js');
+  if (manifest.entrypoints?.cli) {
+    if (!existsSync(cliSourcePath)) {
+      fail(`Manifest for ${packageId} declares a CLI entrypoint but ${path.relative(repoRoot, cliSourcePath)} is missing`);
+    }
+    mkdirSync(path.dirname(cliOutPath), { recursive: true });
+    run(npxCommand(), [
+      'esbuild',
+      cliSourcePath,
+      '--bundle',
+      '--platform=node',
+      '--format=esm',
+      `--outfile=${cliOutPath}`,
+    ]);
+    runtimeFiles.push('dist/cli.js');
+  }
+
   const artifactFiles = [
     'package.json',
     'manifest.json',

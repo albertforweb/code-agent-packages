@@ -259,7 +259,7 @@ function getDefaultTeamGoal(role: string): string {
 function getDefaultTeamTools(role: string): string[] {
   const normalizedRole = role.toLowerCase();
   if (normalizedRole.includes('supervisor') || normalizedRole.includes('manager')) {
-    return ['automation.listTeams', 'automation.listTeamRuns', 'fs.read'];
+    return ['automation.listWorkflows', 'automation.listWorkflowRuns', 'fs.read'];
   }
   if (normalizedRole.includes('qa') || normalizedRole.includes('test')) {
     return ['fs.read', 'bash.run'];
@@ -842,7 +842,7 @@ function createProjectAutomationTeam(
     workspacePath: project.workspacePath ?? process.cwd(),
     permissionMode: project.permissionMode,
     maxIterations: 1,
-    requireQaSignoff: true,
+    providerConfig: { requireQaSignoff: true },
     supervisorId: supervisor?.id ?? members[0]?.id ?? 'employee-supervisor',
     members,
     status: 'draft',

@@ -454,7 +454,7 @@ export async function automationTeamSaveHandler(options: {
     workspacePath: options.workspace,
     permissionMode: options.permissionMode === 'supervised' ? 'supervised' : options.permissionMode === 'full-access' ? 'full-access' : undefined,
     maxIterations,
-    requireQaSignoff: Boolean(options.requireQaSignoff),
+    providerConfig: { requireQaSignoff: Boolean(options.requireQaSignoff) },
   }));
 }
 

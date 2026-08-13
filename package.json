@@ -8,7 +8,8 @@
     "software-developer"
   ],
   "scripts": {
-    "build": "node scripts/build-feature-packages.mjs"
+    "build": "node scripts/build-feature-packages.mjs",
+    "test": "node --test software-developer/tests/*.test.mjs"
   },
   "dependencies": {
     "@codeagent/feature-package-sdk": "file:../code-agent-sdk"

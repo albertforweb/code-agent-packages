@@ -1,6 +1,6 @@
 {
   "name": "@codeagent/package-software-developer",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "private": true,
   "description": "CodeAgent Software Developer feature package",
   "type": "module",
@@ -14,7 +14,8 @@
     "manifest": "manifest.json",
     "artifactId": "codeagent.software-developer.bundle",
     "entrypoints": {
-      "runtime": "dist/index.js"
+      "runtime": "dist/index.js",
+      "cli": "dist/cli.js"
     }
   }
 }
