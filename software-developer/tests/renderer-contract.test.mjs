@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import renderer from '../../dist-feature-packages/software-developer/dist/renderer.js';
+import React from 'react';
 
-test('renderer artifact exposes the SDK renderer module contract', () => {
+test('renderer artifact exposes the SDK renderer module contract', async () => {
+  globalThis.__CODEAGENT_FEATURE_PACKAGE_REACT__ = React;
+  const { default: renderer } = await import('../../dist-feature-packages/software-developer/dist/renderer.js');
   assert.equal(renderer.packageId, 'software-developer');
   assert.equal(typeof renderer.createContribution, 'function');
 

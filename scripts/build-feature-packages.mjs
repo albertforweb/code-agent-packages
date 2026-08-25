@@ -185,8 +185,7 @@ for (const packageId of packageIds) {
       '--bundle',
       '--platform=browser',
       '--format=esm',
-      '--external:react',
-      '--external:@codeagent/feature-package-sdk',
+      `--alias:react=${path.join(repoRoot, 'scripts', 'renderer-react-host.js')}`,
       `--outfile=${rendererOutPath}`,
     ]);
     runtimeFiles.push('dist/renderer.js');
